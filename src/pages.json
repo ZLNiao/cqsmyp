@@ -27,6 +27,13 @@
       }
     },
     {
+      "path": "pages/loading/loading",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/result/result",
       "style": {
         "navigationBarTitleText": "分析结果"
