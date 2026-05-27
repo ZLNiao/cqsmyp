@@ -1,0 +1,57 @@
+name: Build Android APK
+
+# 注意：uni-app App 端官方推荐用 HBuilderX 云打包或本地打包。
+# 此 workflow 仅构建 H5 包（可作为 webapp）和小程序静态资源。
+# App 真机 APK 请使用 HBuilderX 云打包流程。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-h5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Build H5
+        run: npm run build:h5
+
+      - name: Upload H5 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glamup-h5
+          path: dist/build/h5
+
+  build-mp-weixin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Build MP-WeiXin
+        run: npm run build:mp-weixin
+
+      - name: Upload MP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glamup-mp-weixin
+          path: dist/build/mp-weixin
