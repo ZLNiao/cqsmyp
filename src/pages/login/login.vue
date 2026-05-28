@@ -49,14 +49,15 @@
         登录 / 注册
       </button>
 
-      <view class="agree" @click="agreed = !agreed">
-        <view class="checkbox" :class="{ checked: agreed }">
+      <view class="agree">
+        <view class="checkbox" :class="{ checked: agreed }" @click="agreed = !agreed">
           <text v-if="agreed" class="checkmark">✓</text>
         </view>
         <view class="agree-text">
-          我已阅读并同意
-          <text class="link">《用户协议》</text>和
-          <text class="link">《隐私政策》</text>
+          <text @click="agreed = !agreed">我已阅读并同意</text>
+          <text class="link" @click="goAgreement('user')">《用户协议》</text>
+          <text @click="agreed = !agreed">和</text>
+          <text class="link" @click="goAgreement('privacy')">《隐私政策》</text>
         </view>
       </view>
     </view>
@@ -139,6 +140,10 @@ const onLogin = async () => {
 }
 
 const onClose = () => uni.navigateBack()
+
+const goAgreement = (type) => {
+  uni.navigateTo({ url: `/pages/agreement/agreement?type=${type}` })
+}
 
 onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>

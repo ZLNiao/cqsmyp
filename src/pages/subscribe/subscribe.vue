@@ -99,8 +99,9 @@
     </view>
 
     <view class="agreement">
-      点击订阅即代表同意《会员服务协议》<br>
-      自动续费，可在「我的」中随时取消
+      <text>点击订阅即代表同意</text>
+      <text class="link" @click="goAgreement('membership')">《会员服务协议》</text>
+      <text>\n自动续费，可在「我的」中随时取消</text>
     </view>
   </view>
 </template>
@@ -170,6 +171,10 @@ onMounted(() => {
 onUnmounted(() => { if (timer) clearInterval(timer) })
 
 const onClose = () => uni.navigateBack()
+
+const goAgreement = (type) => {
+  uni.navigateTo({ url: `/pages/agreement/agreement?type=${type}` })
+}
 
 const onSubscribe = async () => {
   // 1. 检查登录
@@ -412,5 +417,7 @@ const onSubscribe = async () => {
   text-align: center; font-size: 20rpx; color: #9CA3AF;
   line-height: 1.6; padding: 16rpx 32rpx;
   position: relative; z-index: 2;
+  white-space: pre-line;
 }
+.link { color: #8B5CF6; }
 </style>

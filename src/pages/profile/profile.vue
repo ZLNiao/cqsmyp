@@ -108,6 +108,8 @@ const menu = [
   { emoji: '💎', label: '订单中心', bg: 'linear-gradient(135deg, #BFDBFE, #3B82F6)', key: 'orders' },
   { emoji: '📤', label: '分享 GlamUp', bg: 'linear-gradient(135deg, #FDE68A, #F59E0B)', key: 'share', badge: '送 7 天 VIP' },
   { emoji: '💌', label: '意见反馈', bg: 'linear-gradient(135deg, #BBF7D0, #10B981)', key: 'feedback' },
+  { emoji: '📜', label: '用户协议', bg: 'linear-gradient(135deg, #DDD6FE, #A78BFA)', key: 'agreement-user' },
+  { emoji: '🔒', label: '隐私政策', bg: 'linear-gradient(135deg, #BFDBFE, #60A5FA)', key: 'agreement-privacy' },
   { emoji: '⚙️', label: '设置', bg: 'linear-gradient(135deg, #E5E7EB, #9CA3AF)', key: 'settings' }
 ]
 
@@ -128,7 +130,15 @@ const onLogin = () => {
 }
 const goSubscribe = () => uni.navigateTo({ url: '/pages/subscribe/subscribe' })
 const goHome = () => uni.switchTab({ url: '/pages/index/index' })
-const onMenu = (m) => uni.showToast({ title: m.label, icon: 'none' })
+const onMenu = (m) => {
+  if (m.key === 'agreement-user') {
+    uni.navigateTo({ url: '/pages/agreement/agreement?type=user' })
+  } else if (m.key === 'agreement-privacy') {
+    uni.navigateTo({ url: '/pages/agreement/agreement?type=privacy' })
+  } else {
+    uni.showToast({ title: m.label, icon: 'none' })
+  }
+}
 </script>
 
 <style lang="scss" scoped>

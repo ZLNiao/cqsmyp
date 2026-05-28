@@ -1,0 +1,58 @@
+[
+  {
+    "file": "liuyifei.jpg",
+    "baiduUserId": "liuyifei",
+    "name": "刘亦菲",
+    "emoji": "👩",
+    "faceShape": "heart",
+    "bg": "linear-gradient(135deg, #FBCFE8, #F472B6)"
+  },
+  {
+    "file": "dilireba.jpg",
+    "baiduUserId": "dilireba",
+    "name": "迪丽热巴",
+    "emoji": "👩‍🦰",
+    "faceShape": "heart",
+    "bg": "linear-gradient(135deg, #FDE68A, #F59E0B)"
+  },
+  {
+    "file": "yangmi.jpg",
+    "baiduUserId": "yangmi",
+    "name": "杨幂",
+    "emoji": "👩‍🦱",
+    "faceShape": "oval",
+    "bg": "linear-gradient(135deg, #C4B5FD, #8B5CF6)"
+  },
+  {
+    "file": "gaoyuanyuan.jpg",
+    "baiduUserId": "gaoyuanyuan",
+    "name": "高圆圆",
+    "emoji": "👩",
+    "faceShape": "oval",
+    "bg": "linear-gradient(135deg, #DDD6FE, #8B5CF6)"
+  },
+  {
+    "file": "zhaoliying.jpg",
+    "baiduUserId": "zhaoliying",
+    "name": "赵丽颖",
+    "emoji": "👩",
+    "faceShape": "round",
+    "bg": "linear-gradient(135deg, #FED7AA, #FB923C)"
+  },
+  {
+    "file": "shuqi.jpg",
+    "baiduUserId": "shuqi",
+    "name": "舒淇",
+    "emoji": "👩",
+    "faceShape": "square",
+    "bg": "linear-gradient(135deg, #C4B5FD, #8B5CF6)"
+  },
+  {
+    "file": "zhangziyi.jpg",
+    "baiduUserId": "zhangziyi",
+    "name": "章子怡",
+    "emoji": "👩",
+    "faceShape": "triangle",
+    "bg": "linear-gradient(135deg, #FBCFE8, #F472B6)"
+  }
+]

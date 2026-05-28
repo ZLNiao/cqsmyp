@@ -2,7 +2,8 @@
  * 百度 AI 人脸识别封装
  * 文档：
  *   - 人脸检测 V3：https://ai.baidu.com/ai-doc/FACE/yk37c1u4t
- *   - landmark150：https://ai.baidu.com/ai-doc/FACE/yk37c1u4t#landmark150
+ *   - 人脸搜索 V3：https://ai.baidu.com/ai-doc/FACE/4k37c1ubp
+ *   - 人脸库管理：https://ai.baidu.com/ai-doc/FACE/Mk37c1uzc
  */
 import axios from 'axios'
 import logger from '../utils/logger.js'
@@ -41,7 +42,6 @@ async function getAccessToken() {
 
 /**
  * 人脸检测 V3（核心接口）
- * 返回原始 face 对象，包含 face_shape / landmark150 / quality 等
  */
 export async function detectFace(imageBuffer) {
   const token = await getAccessToken()
@@ -53,10 +53,7 @@ export async function detectFace(imageBuffer) {
       face_field: 'age,gender,beauty,face_shape,quality,landmark150,emotion',
       max_face_num: 1
     },
-    {
-      timeout: 15000,
-      headers: { 'Content-Type': 'application/json' }
-    }
+    { timeout: 15000, headers: { 'Content-Type': 'application/json' } }
   )
 
   if (data.error_code) {
@@ -74,7 +71,6 @@ export async function detectFace(imageBuffer) {
     throw Object.assign(new Error('未检测到人脸'), { statusCode: 400, code: 4001 })
   }
 
-  // 质量检查
   if (face.quality) {
     const q = face.quality
     if (q.blur > 0.7) {
@@ -88,10 +84,7 @@ export async function detectFace(imageBuffer) {
   return face
 }
 
-/**
- * 人脸对比 V3（明星相似度用）
- * @returns {Promise<number>} 0~100
- */
+/** 人脸对比 V3 */
 export async function compareFaces(image1, image2) {
   const token = await getAccessToken()
   const { data } = await axios.post(
@@ -105,4 +98,99 @@ export async function compareFaces(image1, image2) {
 
   if (data.error_code) throw new Error(`人脸对比失败：${data.error_msg}`)
   return data.result?.score || 0
+}
+
+// ============== 人脸库管理（用于明星相似度）==============
+
+const FACESET_GROUP = process.env.BAIDU_FACESET_GROUP || 'celebrities'
+
+/**
+ * 创建人脸库分组（首次运行需要）
+ */
+export async function createFaceGroup(groupId = FACESET_GROUP) {
+  const token = await getAccessToken()
+  const { data } = await axios.post(
+    `${BASE}/rest/2.0/face/v3/faceset/group/add?access_token=${token}`,
+    { group_id: groupId },
+    { timeout: 10000, headers: { 'Content-Type': 'application/json' } }
+  )
+  // 223105 = 已存在，忽略
+  if (data.error_code && data.error_code !== 223105) {
+    throw new Error(`创建分组失败：${data.error_msg}`)
+  }
+  logger.info(`人脸库分组 ${groupId} 已就绪`)
+}
+
+/**
+ * 把一张明星照片加入人脸库
+ * @param {Buffer} imageBuffer
+ * @param {string} userId - 在百度 FaceSet 中的 ID（自定义，建议拼音）
+ * @param {Object} userInfo - 业务元信息（百度限制 256 字符）
+ */
+export async function addFaceToGroup(imageBuffer, userId, userInfo = {}) {
+  const token = await getAccessToken()
+  const { data } = await axios.post(
+    `${BASE}/rest/2.0/face/v3/faceset/user/add?access_token=${token}`,
+    {
+      image: imageBuffer.toString('base64'),
+      image_type: 'BASE64',
+      group_id: FACESET_GROUP,
+      user_id: userId,
+      user_info: JSON.stringify(userInfo).slice(0, 256),
+      quality_control: 'NORMAL',
+      liveness_control: 'NONE'
+    },
+    { timeout: 15000, headers: { 'Content-Type': 'application/json' } }
+  )
+
+  // 223103 = 用户已存在（可能添加了多张图）
+  if (data.error_code && data.error_code !== 223103) {
+    throw new Error(`添加人脸失败：${data.error_msg} (code=${data.error_code})`)
+  }
+  return data.result
+}
+
+/**
+ * 删除人脸库中的某个用户
+ */
+export async function removeFaceFromGroup(userId) {
+  const token = await getAccessToken()
+  const { data } = await axios.post(
+    `${BASE}/rest/2.0/face/v3/faceset/user/delete?access_token=${token}`,
+    { group_id: FACESET_GROUP, user_id: userId },
+    { timeout: 10000, headers: { 'Content-Type': 'application/json' } }
+  )
+  if (data.error_code) {
+    throw new Error(`删除人脸失败：${data.error_msg}`)
+  }
+}
+
+/**
+ * 在人脸库中搜索相似明星 - top N
+ * @param {Buffer} imageBuffer
+ * @param {number} userTopNum - 返回最相似的 N 个 user
+ * @returns {Promise<Array<{user_id, score, user_info}>>}
+ */
+export async function searchInGroup(imageBuffer, userTopNum = 3) {
+  const token = await getAccessToken()
+  const { data } = await axios.post(
+    `${BASE}/rest/2.0/face/v3/search?access_token=${token}`,
+    {
+      image: imageBuffer.toString('base64'),
+      image_type: 'BASE64',
+      group_id_list: FACESET_GROUP,
+      quality_control: 'LOW',
+      liveness_control: 'NONE',
+      user_top_num: userTopNum
+    },
+    { timeout: 15000, headers: { 'Content-Type': 'application/json' } }
+  )
+
+  // 222207 = 未找到匹配的用户（库为空）
+  if (data.error_code === 222207) return []
+  if (data.error_code) {
+    throw new Error(`人脸搜索失败：${data.error_msg}`)
+  }
+
+  return data.result?.user_list || []
 }

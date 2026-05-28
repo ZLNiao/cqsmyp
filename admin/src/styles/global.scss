@@ -1,0 +1,35 @@
+* { box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #F8F9FA;
+  color: #1F2937;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* Element Plus 主题色覆盖（紫色） */
+:root {
+  --el-color-primary: #8B5CF6;
+  --el-color-primary-light-3: #A78BFA;
+  --el-color-primary-light-5: #C4B5FD;
+  --el-color-primary-light-7: #DDD6FE;
+  --el-color-primary-light-9: #F5F3FF;
+  --el-color-primary-dark-2: #7C3AED;
+}
+
+.page-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: #1F2937;
+}

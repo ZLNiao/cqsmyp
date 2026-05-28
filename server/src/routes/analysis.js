@@ -6,6 +6,9 @@ import { describeFaceShape, analyzeFeatures } from '../services/face-features.js
 import { analyzeSkinTone } from '../services/skin-tone.js'
 import { determineSeason, describeSkin } from '../utils/color-season.js'
 import { generateMakeup } from '../services/llm.js'
+import { compressImage, hashBuffer } from '../services/image.js'
+import { searchCelebs } from '../services/celebs.js'
+import redis from '../services/redis.js'
 import { query } from '../services/db.js'
 import logger from '../utils/logger.js'
 
@@ -20,6 +23,8 @@ const upload = multer({
   }
 })
 
+const CACHE_TTL = 5 * 60 // 5 分钟
+
 /**
  * POST /api/analysis/face
  * 完整人脸 + 肤色 + 妆容分析
@@ -28,12 +33,12 @@ const upload = multer({
  *   - file: 图片文件
  *   - userInfo: JSON 字符串 { age, gender, makeupFreq, skinNeeds }
  *
- * Returns: { faceShape, skinTone, season, features, makeup, beauty, age, gender }
+ * Returns: { faceShape, skinTone, features, celebs, makeup, beauty, age, gender, cached }
  */
 router.post('/face', requireAuth, upload.single('file'), async (req, res, next) => {
   try {
-    const buffer = req.file?.buffer
-    if (!buffer) {
+    const rawBuffer = req.file?.buffer
+    if (!rawBuffer) {
       return res.status(400).json({ code: 400, message: '缺少图片文件' })
     }
 
@@ -42,25 +47,49 @@ router.post('/face', requireAuth, upload.single('file'), async (req, res, next) 
       try { userInfo = JSON.parse(req.body.userInfo) } catch {}
     }
 
-    logger.info(`[analysis] 用户 ${req.user.uid} 开始分析，图片大小 ${buffer.length} bytes`)
+    const t0 = Date.now()
+    logger.info(`[analysis] 用户 ${req.user.uid} 开始分析，原图 ${(rawBuffer.length / 1024).toFixed(1)}KB`)
 
-    // ① 百度 AI 人脸检测
+    // ① 压缩图片
+    const buffer = await compressImage(rawBuffer)
+
+    // ② 检查 Redis 缓存（用压缩后图的 hash + userInfo 关键字段做 key）
+    const imageHash = hashBuffer(buffer)
+    const cacheKey = buildCacheKey(imageHash, userInfo)
+    const cached = await redis.get(cacheKey)
+    if (cached) {
+      logger.info(`[analysis] 命中缓存 ${imageHash.slice(0, 8)}，耗时 ${Date.now() - t0}ms`)
+      const result = JSON.parse(cached)
+      // 仍然写入历史（用户的本次行为要记录）
+      saveHistory(req.user.uid, result).catch((e) =>
+        logger.error('保存分析记录失败:', e.message)
+      )
+      return res.json({ code: 0, data: { ...result, cached: true } })
+    }
+
+    // ③ 百度 AI 人脸检测
     const face = await detectFace(buffer)
 
-    // ② 推算脸型
+    // ④ 推算脸型
     const faceShape = describeFaceShape(face.face_shape)
 
-    // ③ 五官特征（landmark150 几何运算）
+    // ⑤ 五官特征（landmark150 几何运算）
     const features = analyzeFeatures(face.landmark150)
 
-    // ④ 肤色分析（sharp 提取脸颊像素）
+    // ⑥ 肤色分析（sharp 提取脸颊像素）
     const skinTone = await analyzeSkinTone(buffer, face.landmark150)
 
-    // ⑤ 色彩季型
+    // ⑦ 色彩季型
     const season = determineSeason(skinTone)
     season.skinDescription = describeSkin(skinTone)
 
-    // ⑥ LLM 生成妆容（失败自动降级到规则）
+    // ⑧ 明星相似度（百度人脸搜索 V3，失败时回退到 mock）
+    const celebs = await searchCelebs(buffer, faceShape.type).catch((e) => {
+      logger.warn('明星搜索失败，使用 mock：' + e.message)
+      return getMockCelebs(faceShape.type)
+    })
+
+    // ⑨ LLM 生成妆容（失败自动降级到规则）
     const makeup = await generateMakeup({ faceShape, season, features, userInfo })
 
     const result = {
@@ -72,18 +101,25 @@ router.post('/face', requireAuth, upload.single('file'), async (req, res, next) 
         depth: skinTone.depth
       },
       features,
+      celebs,
       makeup,
-      celebs: getMockCelebs(faceShape.type), // V2 再接真实人脸搜索
       beauty: face.beauty || 0,
       age: face.age || null,
       gender: face.gender?.type || null,
       analysisVersion: 'v1'
     }
 
-    // ⑦ 写历史记录（异步，不阻塞响应）
+    // ⑩ 写缓存（异步）
+    redis.setex(cacheKey, CACHE_TTL, JSON.stringify(result)).catch((e) =>
+      logger.error('写缓存失败:', e.message)
+    )
+
+    // ⑪ 写历史记录（异步，不阻塞响应）
     saveHistory(req.user.uid, result).catch((e) =>
       logger.error('保存分析记录失败:', e.message)
     )
+
+    logger.info(`[analysis] 完成，总耗时 ${Date.now() - t0}ms`)
 
     res.json({ code: 0, data: result })
   } catch (e) {
@@ -91,6 +127,17 @@ router.post('/face', requireAuth, upload.single('file'), async (req, res, next) 
     next(e)
   }
 })
+
+/**
+ * 缓存 key 设计：
+ * 同一张图 + 相同的关键 userInfo（年龄段+化妆频率）→ 命中缓存
+ * 因为这两个会影响 LLM 妆容方案
+ */
+function buildCacheKey(imageHash, userInfo) {
+  const age = userInfo?.age || ''
+  const freq = userInfo?.makeupFreq || ''
+  return `analysis:${imageHash}:${age}:${freq}`
+}
 
 /** GET /api/analysis/history - 历史记录 */
 router.get('/history', requireAuth, async (req, res, next) => {
@@ -151,7 +198,7 @@ async function saveHistory(userId, result) {
   )
 }
 
-/** 临时明星相似度 mock（V2 用百度人脸搜索 V3 真实匹配） */
+/** mock 明星数据（百度人脸搜索失败时兜底） */
 function getMockCelebs(faceType) {
   const banks = {
     heart: [
