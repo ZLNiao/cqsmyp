@@ -47,6 +47,13 @@
       }
     },
     {
+      "path": "pages/ai-makeup/ai-makeup",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/subscribe/subscribe",
       "style": {
         "navigationBarTitleText": "解锁完整报告",

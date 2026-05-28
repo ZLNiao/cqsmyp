@@ -74,12 +74,61 @@ export function getAnalysisDetail(id) {
 }
 
 /**
- * AI 换妆（V2 功能，先占位）
+ * 获取 AI 换妆可选风格
+ */
+export function getMakeupStyles() {
+  return request({ url: '/analysis/ai-makeup/styles' })
+}
+
+/**
+ * AI 换妆生成
+ * @param {string} filePath - 本地图路径
+ * @param {string} style - daily/date/retro/cool
  */
 export function generateAiMakeup(filePath, style) {
-  return request({
-    url: '/analysis/ai-makeup',
-    method: 'POST',
-    data: { imageUrl: filePath, style }
+  return new Promise((resolve, reject) => {
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      uni.showToast({ title: '请先登录', icon: 'none' })
+      return reject(new Error('未登录'))
+    }
+
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://api.your-domain.com/api'
+      : 'http://localhost:3000/api'
+
+    uni.uploadFile({
+      url: baseUrl + '/analysis/ai-makeup',
+      filePath,
+      name: 'file',
+      formData: { style },
+      header: { Authorization: `Bearer ${token}` },
+      timeout: 90000, // AI 生成更慢，给 90 秒
+      success: (res) => {
+        try {
+          const data = JSON.parse(res.data)
+          if (data.code === 0) {
+            resolve(data.data)
+          } else if (data.code === 4030) {
+            uni.showToast({ title: data.message, icon: 'none' })
+            reject(data)
+          } else {
+            uni.showToast({ title: data.message || '生成失败', icon: 'none' })
+            reject(data)
+          }
+        } catch (e) { reject(e) }
+      },
+      fail: (err) => {
+        uni.showToast({ title: '网络错误', icon: 'none' })
+        reject(err)
+      }
+    })
   })
+}
+
+/**
+ * AI 换妆历史
+ */
+export function getMakeupHistory() {
+  return request({ url: '/analysis/ai-makeup/history' })
 }

@@ -8,6 +8,8 @@ import { determineSeason, describeSkin } from '../utils/color-season.js'
 import { generateMakeup } from '../services/llm.js'
 import { compressImage, hashBuffer } from '../services/image.js'
 import { searchCelebs } from '../services/celebs.js'
+import { generateAiMakeup, MAKEUP_STYLES } from '../services/ai-makeup.js'
+import { getUserById } from '../services/user.js'
 import redis from '../services/redis.js'
 import { query } from '../services/db.js'
 import logger from '../utils/logger.js'
@@ -180,6 +182,105 @@ router.get('/:id', requireAuth, async (req, res, next) => {
     const row = rows[0]
     const result = typeof row.result_json === 'string' ? JSON.parse(row.result_json) : row.result_json
     res.json({ code: 0, data: result })
+  } catch (e) {
+    next(e)
+  }
+})
+
+// =============================================================
+// AI 换妆
+// =============================================================
+
+/** GET /api/analysis/ai-makeup/styles - 可选风格列表 */
+router.get('/ai-makeup/styles', requireAuth, (_, res) => {
+  const list = Object.entries(MAKEUP_STYLES).map(([key, s]) => ({
+    key, ...s
+  }))
+  res.json({ code: 0, data: { list } })
+})
+
+/**
+ * POST /api/analysis/ai-makeup
+ * 生成 AI 换妆图（VIP 专享）
+ *
+ * Form-Data:
+ *   - file: 原图（可与之前分析用的同一张）
+ *   - style: 风格 key（daily/date/retro/cool）
+ */
+router.post('/ai-makeup', requireAuth, upload.single('file'), async (req, res, next) => {
+  try {
+    // 1. VIP 校验
+    const user = await getUserById(req.user.uid)
+    const isVip = user?.is_vip && user.vip_expiry && new Date(user.vip_expiry) > new Date()
+    if (!isVip) {
+      return res.status(403).json({ code: 4030, message: '此功能为 VIP 专享' })
+    }
+
+    const buffer = req.file?.buffer
+    if (!buffer) return res.status(400).json({ code: 400, message: '缺少图片' })
+
+    const { style = 'daily', imageUrl } = req.body
+    if (!MAKEUP_STYLES[style]) {
+      return res.status(400).json({ code: 400, message: '无效风格' })
+    }
+
+    // 2. 压缩
+    const compressed = await compressImage(buffer)
+
+    // 3. 缓存检查（同一张图 + 同一风格 30 分钟内重复使用）
+    const cacheKey = `ai-makeup:${hashBuffer(compressed)}:${style}`
+    const cached = await redis.get(cacheKey)
+    if (cached) {
+      logger.info('[ai-makeup] 命中缓存')
+      return res.json({ code: 0, data: { ...JSON.parse(cached), cached: true } })
+    }
+
+    // 4. 限流：同一用户每分钟最多 3 次（防止刷 API 烧钱）
+    const rateLimitKey = `ai-makeup:limit:${req.user.uid}`
+    const count = await redis.incr(rateLimitKey)
+    if (count === 1) await redis.expire(rateLimitKey, 60)
+    if (count > 3) {
+      return res.status(429).json({ code: 429, message: '请求过于频繁，请 1 分钟后再试' })
+    }
+
+    // 5. 调 AI
+    const result = await generateAiMakeup({
+      imageBuffer: compressed,
+      imageUrl,
+      style
+    })
+
+    // 6. 写库
+    await query(
+      `INSERT INTO ai_makeups (user_id, style, result_url, provider, elapsed_ms)
+       VALUES (?, ?, ?, ?, ?)`,
+      [req.user.uid, style, result.resultUrl, result.provider, result.elapsedMs]
+    )
+
+    // 7. 写缓存（30 分钟）
+    redis.setex(cacheKey, 1800, JSON.stringify(result)).catch(() => {})
+
+    logger.info(`[ai-makeup] user=${req.user.uid} style=${style} 耗时 ${result.elapsedMs}ms`)
+    res.json({ code: 0, data: result })
+  } catch (e) {
+    logger.error('AI 换妆失败:', e.message)
+    next(e)
+  }
+})
+
+/** GET /api/analysis/ai-makeup/history - 我的 AI 换妆历史 */
+router.get('/ai-makeup/history', requireAuth, async (req, res, next) => {
+  try {
+    const list = await query(
+      `SELECT id, style, result_url, created_at FROM ai_makeups
+       WHERE user_id = ?
+       ORDER BY id DESC LIMIT 50`,
+      [req.user.uid]
+    )
+    res.json({
+      code: 0,
+      data: { list: list.map((r) => ({ ...r, styleInfo: MAKEUP_STYLES[r.style] })) }
+    })
   } catch (e) {
     next(e)
   }

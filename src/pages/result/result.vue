@@ -211,7 +211,7 @@ onMounted(() => {
 
 const onTryAi = () => {
   if (!isVip.value) { goSubscribe(); return }
-  uni.showToast({ title: 'AI 变美生成中...', icon: 'none' })
+  uni.navigateTo({ url: '/pages/ai-makeup/ai-makeup' })
 }
 const onShare = () => uni.showToast({ title: '调起分享', icon: 'none' })
 const onSave = () => uni.showToast({ title: '已保存到相册', icon: 'success' })

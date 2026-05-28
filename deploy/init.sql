@@ -60,6 +60,19 @@ CREATE TABLE IF NOT EXISTS celebrities (
     INDEX idx_enabled (enabled)
 ) ENGINE=InnoDB;
 
+-- AI 换妆生成记录
+CREATE TABLE IF NOT EXISTS ai_makeups (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    style VARCHAR(32) NOT NULL COMMENT '妆容风格 key（daily/date/retro/cool）',
+    source_url VARCHAR(500) COMMENT '原图 URL（OSS）',
+    result_url VARCHAR(500) NOT NULL COMMENT '生成后的图 URL',
+    provider VARCHAR(32) COMMENT 'meitu / tongyi / mock',
+    elapsed_ms INT COMMENT '生成耗时（毫秒）',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_created (user_id, created_at)
+) ENGINE=InnoDB;
+
 -- 默认管理员（密码：admin123，生产环境务必改！）
 -- bcrypt('admin123') = $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
 CREATE TABLE IF NOT EXISTS admin_users (
