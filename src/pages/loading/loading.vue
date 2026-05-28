@@ -17,20 +17,29 @@
       </view>
     </view>
 
-    <view class="title">AI 正在分析中...</view>
+    <view class="title">{{ done ? '分析完成 ✨' : 'AI 正在分析中...' }}</view>
 
     <view class="progress-list">
-      <view v-for="(s, i) in steps" :key="i" class="step" :class="{ done: i < activeIdx, active: i === activeIdx }">
+      <view
+        v-for="(s, i) in steps"
+        :key="i"
+        class="step"
+        :class="{ done: i < activeIdx, active: i === activeIdx && !done }"
+      >
         <view class="step-icon">
-          <text v-if="i < activeIdx">✓</text>
+          <text v-if="i < activeIdx || done">✓</text>
           <view v-else-if="i === activeIdx" class="loading-dot" />
-          <text v-else></text>
         </view>
         <text class="step-text">{{ s }}</text>
       </view>
     </view>
 
-    <view class="tip">通常需要 3~5 秒，请稍候</view>
+    <view v-if="errorMsg" class="error">
+      <text class="error-emoji">⚠️</text>
+      <text>{{ errorMsg }}</text>
+      <view class="retry" @click="retry">点击重试</view>
+    </view>
+    <view v-else class="tip">通常需要 5~10 秒，请稍候</view>
   </view>
 </template>
 
@@ -40,39 +49,63 @@ import { analyzeFace } from '@/api/analysis'
 
 const photo = ref('')
 const activeIdx = ref(0)
+const done = ref(false)
+const errorMsg = ref('')
 
 const steps = [
+  '上传照片到云端...',
   '人脸检测中...',
   '识别脸型轮廓...',
   '分析肤色调性...',
-  '生成色彩方案...',
-  '匹配妆容建议...'
+  '生成色彩季型...',
+  'AI 撰写妆容方案...'
 ]
 
 let stepTimer = null
 
-onMounted(async () => {
-  photo.value = uni.getStorageSync('pendingPhoto') || ''
+const advance = () => {
+  if (activeIdx.value < steps.length - 1) {
+    activeIdx.value += 1
+  }
+}
 
-  // 模拟分析进度
-  stepTimer = setInterval(() => {
-    if (activeIdx.value < steps.length) {
-      activeIdx.value += 1
-    }
-  }, 600)
+const start = async () => {
+  errorMsg.value = ''
+  activeIdx.value = 0
+  done.value = false
+
+  photo.value = uni.getStorageSync('pendingPhoto') || ''
+  const userInfo = uni.getStorageSync('userInfo') || {}
+
+  if (!photo.value) {
+    errorMsg.value = '未找到照片，请重新选择'
+    return
+  }
+
+  // 视觉进度（每 1.5s 推进一步，让用户感觉有事在做）
+  stepTimer = setInterval(advance, 1500)
 
   try {
-    const result = await analyzeFace(photo.value)
+    const result = await analyzeFace(photo.value, userInfo)
+    if (stepTimer) { clearInterval(stepTimer); stepTimer = null }
+    activeIdx.value = steps.length
+    done.value = true
+
     uni.setStorageSync('lastAnalysis', result)
+
+    // 短暂展示完成状态后跳转
     setTimeout(() => {
       uni.redirectTo({ url: '/pages/result/result' })
-    }, 800)
+    }, 600)
   } catch (e) {
-    uni.showToast({ title: '分析失败', icon: 'none' })
-    setTimeout(() => uni.navigateBack(), 1500)
+    if (stepTimer) { clearInterval(stepTimer); stepTimer = null }
+    errorMsg.value = e?.message || '分析失败，请检查网络或重试'
   }
-})
+}
 
+const retry = () => start()
+
+onMounted(start)
 onUnmounted(() => { if (stepTimer) clearInterval(stepTimer) })
 </script>
 
@@ -151,6 +184,18 @@ onUnmounted(() => { if (stepTimer) clearInterval(stepTimer) })
 .step.done .step-text, .step.active .step-text { color: #1F2937; font-weight: 600; }
 
 .tip { margin-top: 32rpx; font-size: 24rpx; color: #9CA3AF; }
+.error {
+  margin-top: 40rpx; padding: 24rpx 32rpx;
+  background: #FEF2F2; border-radius: 16rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 12rpx;
+  color: #DC2626; font-size: 26rpx; max-width: 100%;
+}
+.error-emoji { font-size: 48rpx; }
+.retry {
+  padding: 12rpx 32rpx; background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: #fff; border-radius: 32rpx; font-size: 24rpx; font-weight: 600;
+  margin-top: 8rpx;
+}
 
 @keyframes scan {
   0% { top: 0; }

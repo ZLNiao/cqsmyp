@@ -1,49 +1,80 @@
 /**
- * 分析相关接口
- * 真实后端会代理调用：百度AI 人脸检测/皮肤分析/人脸对比 + LLM 妆容生成
+ * 分析相关接口（真实接入百度 AI）
+ * 后端串起：百度人脸检测 V3 + 五官几何运算 + sharp 肤色分析 + 12 季型 + LLM 妆容
  */
-import { request, upload } from './request'
+import { request } from './request'
+
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://api.your-domain.com/api'
+  : 'http://localhost:3000/api'
 
 /**
- * 上传自拍 → 后端调用百度 AI → 返回完整分析结果
- * @param {string} filePath - 本地图片路径
- * @returns {Promise<{faceShape, skinTone, features, celebs, makeup}>}
+ * 上传自拍 → 完整分析
+ * @param {string} filePath - uni.chooseImage 返回的本地路径
+ * @param {Object} userInfo - { age, gender, makeupFreq, skinNeeds }
+ * @returns {Promise<{faceShape, skinTone, features, celebs, makeup, beauty, age}>}
  */
-export async function analyzeFace(filePath) {
-  // 真实环境：先上传图片，再请求分析接口
-  // const { url } = await upload(filePath)
-  // return request({ url: '/analysis/face', method: 'POST', data: { imageUrl: url } })
-
-  // ⚠️ 开发期 mock：3 秒后返回假数据
-  await new Promise((r) => setTimeout(r, 1500))
-  return {
-    faceShape: { label: '心形脸', feature: '额头宽、下巴尖', suit: '柔和眉形、浅色唇妆' },
-    skinTone: { label: '暖调 - 春季型', tone: '暖白皮', colors: '大地色、珊瑚色、暖橘色' },
-    features: [
-      { emoji: '👁️', name: '眼型', value: '杏眼' },
-      { emoji: '✏️', name: '眉形', value: '标准眉' },
-      { emoji: '💋', name: '唇形', value: 'M 形唇' },
-      { emoji: '👃', name: '鼻型', value: '直鼻' }
-    ],
-    celebs: [
-      { emoji: '👩', name: '明星A', sim: 85 },
-      { emoji: '👩‍🦰', name: '明星B', sim: 72 },
-      { emoji: '👩‍🦱', name: '明星C', sim: 65 }
-    ],
-    makeup: {
-      title: '日常通勤妆',
-      steps: [
-        '底妆：轻薄粉底 + 局部遮瑕',
-        '眼妆：大地色眼影 + 自然眼线',
-        '唇妆：豆沙色唇釉',
-        '腮红：珊瑚色斜向扫'
-      ]
+export function analyzeFace(filePath, userInfo = {}) {
+  return new Promise((resolve, reject) => {
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      uni.showToast({ title: '请先登录', icon: 'none' })
+      uni.navigateTo({ url: '/pages/login/login' })
+      return reject(new Error('未登录'))
     }
-  }
+
+    uni.uploadFile({
+      url: BASE_URL + '/analysis/face',
+      filePath,
+      name: 'file',
+      formData: {
+        userInfo: JSON.stringify(userInfo)
+      },
+      header: { Authorization: `Bearer ${token}` },
+      timeout: 60000, // AI 分析较慢，给足超时时间
+      success: (res) => {
+        try {
+          const data = JSON.parse(res.data)
+          if (data.code === 0) {
+            resolve(data.data)
+          } else if (res.statusCode === 401) {
+            uni.removeStorageSync('token')
+            uni.showToast({ title: '请重新登录', icon: 'none' })
+            uni.navigateTo({ url: '/pages/login/login' })
+            reject(data)
+          } else {
+            uni.showToast({ title: data.message || '分析失败', icon: 'none', duration: 3000 })
+            reject(data)
+          }
+        } catch (e) {
+          uni.showToast({ title: '解析响应失败', icon: 'none' })
+          reject(e)
+        }
+      },
+      fail: (err) => {
+        uni.showToast({ title: '网络错误，请重试', icon: 'none' })
+        reject(err)
+      }
+    })
+  })
 }
 
 /**
- * AI 换妆（V2 功能）
+ * 历史分析记录列表
+ */
+export function getHistory(page = 1) {
+  return request({ url: `/analysis/history?page=${page}` })
+}
+
+/**
+ * 历史记录详情
+ */
+export function getAnalysisDetail(id) {
+  return request({ url: `/analysis/${id}` })
+}
+
+/**
+ * AI 换妆（V2 功能，先占位）
  */
 export function generateAiMakeup(filePath, style) {
   return request({
@@ -51,11 +82,4 @@ export function generateAiMakeup(filePath, style) {
     method: 'POST',
     data: { imageUrl: filePath, style }
   })
-}
-
-/**
- * 获取历史分析记录
- */
-export function getHistory(page = 1) {
-  return request({ url: `/analysis/history?page=${page}` })
 }

@@ -42,10 +42,15 @@
     <!-- 肤色 + 色盘 -->
     <analysis-card title="肤色与色彩季型" emoji="🎨">
       <view class="big">{{ data.skinTone.label }}</view>
-      <view class="muted"><text class="dot">·</text>肤色类型：{{ data.skinTone.tone }}</view>
+      <view v-if="data.skinTone.desc" class="muted">
+        <text class="dot">·</text>{{ data.skinTone.desc }}
+      </view>
+      <view v-if="data.skinTone.skinDescription" class="muted">
+        <text class="dot">·</text>肤色：{{ data.skinTone.skinDescription }}
+      </view>
       <view class="palette-label">推荐色系</view>
       <view class="palette">
-        <view v-for="(c, i) in colorPalette" :key="i" class="color-chip">
+        <view v-for="(c, i) in (data.skinTone.colors || colorPalette)" :key="i" class="color-chip">
           <view class="color-circle" :style="{ background: c.color }" />
           <text class="color-name">{{ c.name }}</text>
         </view>
@@ -157,11 +162,19 @@ const data = ref({
   }
 })
 
-const scores = [
-  { label: '颜值评分', value: '92', unit: '分' },
-  { label: '上镜指数', value: 'A+', unit: '' },
-  { label: '风格契合', value: '95', unit: '%' }
-]
+const scores = computed(() => [
+  { label: '颜值评分', value: data.value.beauty ? Math.round(data.value.beauty) : 92, unit: '分' },
+  { label: '上镜指数', value: getPhotoGrade(data.value.beauty), unit: '' },
+  { label: '风格契合', value: data.value.faceShape?.probability ? Math.round(data.value.faceShape.probability * 100) : 95, unit: '%' }
+])
+
+function getPhotoGrade(beauty) {
+  if (!beauty) return 'A+'
+  if (beauty >= 80) return 'A+'
+  if (beauty >= 70) return 'A'
+  if (beauty >= 60) return 'B+'
+  return 'B'
+}
 
 const colorPalette = [
   { name: '大地色', color: '#A78460' },
