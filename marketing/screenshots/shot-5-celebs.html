@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 5 - 明星相似度</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #FFF7ED 0%, #FBEAEA 60%, #F8F9FA 100%); }
+
+/* 明星对比 */
+.celebs-card {
+  margin: 32px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 40px;
+  box-shadow: 0 16px 48px rgba(244, 114, 182, 0.15);
+}
+
+.celebs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.celeb-row {
+  display: grid;
+  grid-template-columns: 120px 180px 1fr 100px;
+  gap: 24px;
+  align-items: center;
+}
+.celeb-avatar {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+.celeb-name {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1F2937;
+}
+.celeb-bar-wrap {
+  position: relative;
+  height: 24px;
+  background: #F3F4F6;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.celeb-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8B5CF6, #EC4899);
+  border-radius: 12px;
+}
+.celeb-sim {
+  font-size: 40px;
+  font-weight: 800;
+  text-align: right;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 你的脸 */
+.your-face {
+  text-align: center;
+  padding: 40px 0;
+}
+.your-face-circle {
+  position: relative;
+  width: 200px; height: 200px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FBCFE8, #F472B6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 96px;
+}
+.your-face-circle::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  filter: blur(24px);
+  opacity: 0.4;
+  z-index: -1;
+}
+.your-face-name {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-top: 24px;
+}
+.your-face-tag {
+  font-size: 24px;
+  color: #8B5CF6;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.divider-vs {
+  text-align: center;
+  margin: 32px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #9CA3AF;
+  letter-spacing: 8px;
+}
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob blob-pink" style="width: 500px; height: 500px; top: -100px; right: -150px;"></div>
+    <div class="blob" style="width: 450px; height: 450px; bottom: 200px; left: -100px; background: #FDE68A; opacity: 0.5;"></div>
+
+    <div class="headline">
+      <h1>发现<br><span class="gradient">你的明星脸</span></h1>
+      <p>百万明星人脸库 · AI 智能匹配</p>
+    </div>
+
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+
+        <div style="text-align: center; padding: 48px 32px 16px;">
+          <div style="font-size: 44px; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⭐ 明星相似度</div>
+          <div style="font-size: 24px; color: #6B7280; margin-top: 12px;">AI 匹配最像你的 3 位明星</div>
+        </div>
+
+        <div class="your-face">
+          <div class="your-face-circle">👩</div>
+          <div class="your-face-name">你</div>
+          <div class="your-face-tag">心形脸 · 暖调春季型</div>
+        </div>
+
+        <div class="divider-vs">VS · 最像的 3 位</div>
+
+        <div class="celebs-card">
+          <div class="celebs-list">
+            <div class="celeb-row">
+              <div class="celeb-avatar" style="background: linear-gradient(135deg, #FBCFE8, #F472B6)">👩</div>
+              <div class="celeb-name">明星 A</div>
+              <div class="celeb-bar-wrap">
+                <div class="celeb-bar" style="width: 85%"></div>
+              </div>
+              <div class="celeb-sim">85%</div>
+            </div>
+            <div class="celeb-row">
+              <div class="celeb-avatar" style="background: linear-gradient(135deg, #FDE68A, #F59E0B)">👩‍🦰</div>
+              <div class="celeb-name">明星 B</div>
+              <div class="celeb-bar-wrap">
+                <div class="celeb-bar" style="width: 72%"></div>
+              </div>
+              <div class="celeb-sim">72%</div>
+            </div>
+            <div class="celeb-row">
+              <div class="celeb-avatar" style="background: linear-gradient(135deg, #C4B5FD, #8B5CF6)">👩‍🦱</div>
+              <div class="celeb-name">明星 C</div>
+              <div class="celeb-bar-wrap">
+                <div class="celeb-bar" style="width: 65%"></div>
+              </div>
+              <div class="celeb-sim">65%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">分享朋友圈 · 看看你像谁</div>
+    </div>
+
+    <span class="sparkle" style="top: 360px; left: 100px;">⭐</span>
+    <span class="sparkle" style="top: 480px; right: 120px;">✨</span>
+  </div>
+</body>
+</html>

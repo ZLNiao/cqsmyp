@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 2 - 脸型分析</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #F5F3FF 0%, #FDF2F8 60%, #F8F9FA 100%); }
+
+/* App - 结果页 hero */
+.r-hero {
+  background: linear-gradient(180deg, #FAF5FF 0%, #FDF2F8 60%, #F8F9FA 100%);
+  padding: 32px 32px 56px;
+  text-align: center;
+  border-radius: 0 0 60px 60px;
+}
+.r-photo-wrap {
+  position: relative;
+  width: 280px; height: 280px;
+  margin: 24px auto 28px;
+}
+.r-photo {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FBCFE8, #F472B6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 110px;
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.25);
+  position: relative;
+  z-index: 2;
+}
+.r-glow {
+  position: absolute; inset: -24px;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.4;
+  z-index: 1;
+}
+.r-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 32px;
+  background: rgba(139, 92, 246, 0.12);
+  color: #8B5CF6;
+  border-radius: 32px;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.r-title {
+  font-size: 56px;
+  font-weight: 700;
+  color: #1F2937;
+}
+.r-sub {
+  font-size: 28px;
+  color: #9CA3AF;
+  margin-top: 16px;
+}
+
+/* 评分三宫格 */
+.score-card {
+  margin: -36px 24px 24px;
+  background: #fff;
+  border-radius: 28px;
+  padding: 36px 0;
+  box-shadow: 0 12px 32px rgba(0,0,0,.06);
+  position: relative; z-index: 5;
+  display: flex;
+}
+.score-item { flex: 1; text-align: center; position: relative; }
+.score-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 20%; height: 60%;
+  width: 2px;
+  background: #F3F4F6;
+}
+.score-num {
+  font-size: 60px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.score-label {
+  font-size: 26px;
+  color: #6B7280;
+  margin-top: 8px;
+}
+
+/* 脸型卡片 */
+.face-shape-card {
+  margin: 24px;
+}
+.face-shape-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.face-shape-illu {
+  width: 160px; height: 160px;
+  border-radius: 36px;
+  background: linear-gradient(135deg, #FBCFE8, #F472B6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  flex-shrink: 0;
+  box-shadow: 0 12px 32px rgba(244, 114, 182, 0.3);
+}
+.face-shape-info { flex: 1; }
+.face-shape-name {
+  font-size: 48px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 12px;
+}
+.face-shape-info .row {
+  font-size: 28px;
+  color: #6B7280;
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.face-shape-info .row .dot { color: #8B5CF6; margin-right: 12px; }
+
+/* 五官 grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+.feat-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+.feat-cell .icon-wrap {
+  width: 84px; height: 84px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #F5F3FF, #FDF2F8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+.feat-cell .name { font-size: 24px; color: #9CA3AF; }
+.feat-cell .value { font-size: 32px; font-weight: 600; color: #1F2937; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob blob-purple" style="width: 500px; height: 500px; top: -100px; right: -150px;"></div>
+    <div class="blob blob-pink" style="width: 450px; height: 450px; bottom: 300px; left: -100px;"></div>
+
+    <div class="headline">
+      <h1>精准识别<br><span class="gradient">你的脸型</span></h1>
+      <p>5 大脸型 + 4 大五官特征 · AI 一秒搞定</p>
+    </div>
+
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+
+        <div class="r-hero">
+          <div class="r-photo-wrap">
+            <div class="r-glow"></div>
+            <div class="r-photo">👩</div>
+          </div>
+          <div class="r-tag">✨ 你的专属美颜报告</div>
+          <div class="r-title">心形脸 · 暖调春季</div>
+          <div class="r-sub">分析完成于 5月28日 14:23</div>
+        </div>
+
+        <div class="score-card">
+          <div class="score-item">
+            <div class="score-num">92<span style="font-size: 28px; color: #6B7280;">分</span></div>
+            <div class="score-label">颜值评分</div>
+          </div>
+          <div class="score-item">
+            <div class="score-num">A+</div>
+            <div class="score-label">上镜指数</div>
+          </div>
+          <div class="score-item">
+            <div class="score-num">95<span style="font-size: 28px; color: #6B7280;">%</span></div>
+            <div class="score-label">风格契合</div>
+          </div>
+        </div>
+
+        <div class="card face-shape-card">
+          <div class="card-section-title">
+            <span class="icon-box">🟣</span>
+            <span>你的脸型</span>
+          </div>
+          <div class="face-shape-row">
+            <div class="face-shape-illu">💗</div>
+            <div class="face-shape-info">
+              <div class="face-shape-name">心形脸</div>
+              <div class="row"><span class="dot">·</span>额头较宽、下巴尖细</div>
+              <div class="row"><span class="dot">·</span>柔和眉形、浅色唇妆</div>
+            </div>
+          </div>
+          <div class="features-grid">
+            <div class="feat-cell">
+              <div class="icon-wrap">👁️</div>
+              <div>
+                <div class="name">眼型</div>
+                <div class="value">杏眼</div>
+              </div>
+            </div>
+            <div class="feat-cell">
+              <div class="icon-wrap">✏️</div>
+              <div>
+                <div class="name">眉形</div>
+                <div class="value">标准眉</div>
+              </div>
+            </div>
+            <div class="feat-cell">
+              <div class="icon-wrap">💋</div>
+              <div>
+                <div class="name">唇形</div>
+                <div class="value">M 形唇</div>
+              </div>
+            </div>
+            <div class="feat-cell">
+              <div class="icon-wrap">👃</div>
+              <div>
+                <div class="name">鼻型</div>
+                <div class="value">直鼻</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">基于百度 AI · 精准至毫秒</div>
+    </div>
+
+    <span class="sparkle" style="top: 360px; right: 120px;">✨</span>
+    <span class="sparkle" style="top: 500px; left: 100px;">💫</span>
+  </div>
+</body>
+</html>

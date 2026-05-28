@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 1 - 首页</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #F5F3FF 0%, #FDF2F8 60%, #F8F9FA 100%); }
+
+/* App 内 - 首页 */
+.app-hero {
+  background: linear-gradient(180deg, #F5F3FF 0%, #FDF2F8 100%);
+  padding: 0 40px 40px;
+  border-radius: 0 0 60px 60px;
+}
+.app-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60rpx 0 24rpx;
+  padding-top: 32px;
+  padding-bottom: 24px;
+}
+.logo-row { display: flex; align-items: center; gap: 12px; }
+.logo-row .logo-emoji { font-size: 44px; }
+.logo-row .logo-text {
+  font-size: 48px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.bell { position: relative; font-size: 40px; }
+.bell::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 16px; height: 16px;
+  background: #EF4444;
+  border-radius: 50%;
+}
+
+.greet { padding: 24px 0 32px; }
+.greet-title { font-size: 56px; font-weight: 700; color: #1F2937; }
+.greet-sub { font-size: 32px; color: #6B7280; margin-top: 12px; }
+
+.tip-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  padding: 32px 36px;
+  border-radius: 28px;
+  border: 3px solid rgba(139, 92, 246, 0.12);
+}
+.tip-card .tag { font-size: 28px; color: #8B5CF6; font-weight: 700; }
+.tip-card .text { font-size: 32px; color: #1F2937; margin-top: 12px; line-height: 1.5; }
+
+/* 上传卡 */
+.upload-card {
+  margin: 32px 40px 0;
+  padding: 64px 40px 48px;
+  background: #fff;
+  border-radius: 40px;
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.1);
+  text-align: center;
+}
+.upload-emoji-wrap {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F5F3FF, #FDF2F8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 88px;
+}
+.upload-title {
+  font-size: 44px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 16px;
+}
+.upload-hint {
+  font-size: 28px;
+  color: #6B7280;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100px;
+  border-radius: 50px;
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.btn.primary {
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.4);
+}
+.btn.ghost {
+  background: #F3F4F6;
+  color: #1F2937;
+}
+
+/* 三大功能图标 */
+.features {
+  display: flex;
+  justify-content: space-around;
+  margin: 40px 40px;
+  padding: 40px 0;
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.04);
+}
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.feature .feat-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+}
+.feature .feat-label { font-size: 28px; font-weight: 600; color: #6B7280; }
+
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <!-- 装饰光斑 -->
+    <div class="blob blob-purple" style="width: 600px; height: 600px; top: -150px; right: -150px;"></div>
+    <div class="blob blob-pink" style="width: 500px; height: 500px; bottom: 200px; left: -100px;"></div>
+
+    <!-- 顶部标题 -->
+    <div class="headline">
+      <h1>3 秒读懂<br><span class="gradient">你的美</span></h1>
+      <p>AI 美颜分析 · 找到属于你的色彩</p>
+    </div>
+
+    <!-- 手机 mockup -->
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+        <!-- App 首页 -->
+        <div class="app-hero">
+          <div class="app-navbar">
+            <div class="logo-row">
+              <span class="logo-emoji">✨</span>
+              <span class="logo-text">GlamUp</span>
+            </div>
+            <span class="bell">🔔</span>
+          </div>
+          <div class="greet">
+            <div class="greet-title">早上好, 美人 👋</div>
+            <div class="greet-sub">今天也想看看自己有多美吗？</div>
+          </div>
+          <div class="tip-card">
+            <div class="tag">💡 今日色彩小贴士</div>
+            <div class="text">暖调皮肤搭配珊瑚色和橘红色更显气色</div>
+          </div>
+        </div>
+
+        <div class="upload-card">
+          <div class="upload-emoji-wrap">📷</div>
+          <div class="upload-title">开始你的美颜之旅</div>
+          <div class="upload-hint">拍摄或上传一张正面照<br>AI 将为你生成专属分析报告</div>
+          <div class="btn primary">📷 拍一张</div>
+          <div class="btn ghost">🖼️ 从相册选择</div>
+        </div>
+
+        <div class="features">
+          <div class="feature">
+            <div class="feat-icon" style="background: linear-gradient(135deg, #FDE68A, #F59E0B)">🔍</div>
+            <div class="feat-label">脸型分析</div>
+          </div>
+          <div class="feature">
+            <div class="feat-icon" style="background: linear-gradient(135deg, #DDD6FE, #8B5CF6)">🎨</div>
+            <div class="feat-label">色彩季型</div>
+          </div>
+          <div class="feature">
+            <div class="feat-icon" style="background: linear-gradient(135deg, #FBCFE8, #EC4899)">💄</div>
+            <div class="feat-label">AI 妆容</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部品牌 -->
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">让 AI 帮你找到属于自己的美</div>
+    </div>
+
+    <!-- 闪光装饰 -->
+    <span class="sparkle" style="top: 380px; left: 120px;">✨</span>
+    <span class="sparkle" style="top: 480px; right: 160px;">💫</span>
+  </div>
+</body>
+</html>

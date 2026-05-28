@@ -1,0 +1,32 @@
+/* GlamUp 全局 SCSS 变量 */
+
+/* 主色 - 紫色渐变（高级感 + 女性向）*/
+$primary: #8B5CF6;
+$primary-dark: #6D28D9;
+$primary-light: #C4B5FD;
+$gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+
+/* 中性色 */
+$bg: #F8F9FA;
+$card-bg: #FFFFFF;
+$text-primary: #1F2937;
+$text-secondary: #6B7280;
+$text-tertiary: #9CA3AF;
+$border: #E5E7EB;
+
+/* 功能色 */
+$success: #10B981;
+$warning: #F59E0B;
+$danger: #EF4444;
+$gold: #FBBF24;
+
+/* 圆角 */
+$radius-sm: 8rpx;
+$radius-md: 16rpx;
+$radius-lg: 24rpx;
+$radius-xl: 32rpx;
+
+/* 阴影 */
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+$shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 16rpx 48rpx rgba(139, 92, 246, 0.15);

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 6 - 订阅页</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #F5F3FF 0%, #FDF2F8 60%, #F8F9FA 100%); }
+
+/* 王冠 hero */
+.crown-hero {
+  text-align: center;
+  padding: 56px 32px 32px;
+}
+.crown {
+  font-size: 140px;
+  filter: drop-shadow(0 16px 32px rgba(245, 158, 11, 0.4));
+}
+.crown-title {
+  font-size: 56px;
+  font-weight: 800;
+  color: #1F2937;
+  margin-top: 24px;
+}
+.crown-sub {
+  font-size: 28px;
+  color: #6B7280;
+  margin-top: 16px;
+}
+
+/* 限时倒计时 */
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #FEE2E2, #FCE7F3);
+  border-radius: 36px;
+}
+.cd-label {
+  font-size: 26px;
+  color: #DC2626;
+  font-weight: 700;
+}
+.cd-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cd-num {
+  display: inline-block;
+  min-width: 48px;
+  padding: 6px 12px;
+  background: #DC2626;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+}
+.cd-colon { color: #DC2626; font-weight: 800; }
+
+/* 套餐 */
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin: 32px;
+}
+.plan {
+  position: relative;
+  padding: 36px 16px 28px;
+  background: #fff;
+  border: 4px solid #E5E7EB;
+  border-radius: 28px;
+  text-align: center;
+}
+.plan.active {
+  border-color: #8B5CF6;
+  background: linear-gradient(180deg, #FAF5FF, #fff);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.25);
+  transform: translateY(-8px);
+}
+.plan .badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+  color: #fff;
+  font-size: 20px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.plan-period { font-size: 26px; color: #6B7280; margin-bottom: 12px; }
+.plan-price { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
+.plan-currency { font-size: 24px; color: #1F2937; }
+.plan-num { font-size: 48px; font-weight: 800; color: #1F2937; }
+.plan-original {
+  font-size: 22px;
+  color: #9CA3AF;
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+.plan-hint { font-size: 22px; color: #8B5CF6; font-weight: 700; margin-top: 8px; }
+.plan .check {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #8B5CF6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* 福利 */
+.benefits {
+  margin: 0 32px;
+  padding: 28px 32px;
+  background: #fff;
+  border-radius: 28px;
+}
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+.benefit-emoji { font-size: 40px; }
+.benefit-content { flex: 1; }
+.benefit-title { font-size: 28px; font-weight: 700; color: #1F2937; }
+.benefit-sub { font-size: 22px; color: #6B7280; margin-top: 4px; }
+
+/* 底部固定按钮 */
+.bottom-bar {
+  margin: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 -8px 32px rgba(0,0,0,.08);
+}
+.bottom-info { flex: 1; }
+.bottom-price { font-size: 44px; font-weight: 800; color: #1F2937; }
+.bottom-period { font-size: 24px; color: #6B7280; }
+.bottom-tip { display: block; font-size: 22px; color: #8B5CF6; margin-top: 4px; }
+.bottom-btn {
+  flex-shrink: 0;
+  height: 96px;
+  padding: 0 56px;
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: #fff;
+  border-radius: 48px;
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+}
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob blob-purple" style="width: 600px; height: 600px; top: -150px; right: -150px;"></div>
+    <div class="blob blob-pink" style="width: 500px; height: 500px; bottom: 100px; left: -100px;"></div>
+
+    <div class="headline">
+      <h1>7 天<br><span class="gradient">免费试用</span></h1>
+      <p>解锁完整功能 · 限时特惠 ¥29.90/月</p>
+    </div>
+
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+
+        <div class="crown-hero">
+          <div class="crown">👑</div>
+          <div class="crown-title">解锁完整版</div>
+          <div class="crown-sub">让 AI 为你定制专属的美颜方案</div>
+          <div class="countdown">
+            <span class="cd-label">🔥 限时优惠仅剩</span>
+            <div class="cd-time">
+              <span class="cd-num">23</span>
+              <span class="cd-colon">:</span>
+              <span class="cd-num">59</span>
+              <span class="cd-colon">:</span>
+              <span class="cd-num">59</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="plans">
+          <div class="plan">
+            <div class="plan-period">月度</div>
+            <div class="plan-price">
+              <span class="plan-currency">¥</span>
+              <span class="plan-num">29.9</span>
+            </div>
+            <div class="plan-original">原价 ¥39.9</div>
+            <div class="plan-hint">首月特惠</div>
+          </div>
+          <div class="plan active">
+            <div class="badge">🔥 最划算</div>
+            <div class="plan-period">季度</div>
+            <div class="plan-price">
+              <span class="plan-currency">¥</span>
+              <span class="plan-num">69.9</span>
+            </div>
+            <div class="plan-original">原价 ¥119.7</div>
+            <div class="plan-hint">省 33%</div>
+            <div class="check">✓</div>
+          </div>
+          <div class="plan">
+            <div class="plan-period">年度</div>
+            <div class="plan-price">
+              <span class="plan-currency">¥</span>
+              <span class="plan-num">199</span>
+            </div>
+            <div class="plan-original">原价 ¥478</div>
+            <div class="plan-hint">省 58%</div>
+          </div>
+        </div>
+
+        <div class="benefits">
+          <div class="benefit">
+            <span class="benefit-emoji">🛡️</span>
+            <div class="benefit-content">
+              <div class="benefit-title">数据安全保障</div>
+              <div class="benefit-sub">照片仅本地处理，不会上传</div>
+            </div>
+          </div>
+          <div class="benefit">
+            <span class="benefit-emoji">⏰</span>
+            <div class="benefit-content">
+              <div class="benefit-title">7 天免费试用</div>
+              <div class="benefit-sub">随时取消，零风险体验</div>
+            </div>
+          </div>
+          <div class="benefit">
+            <span class="benefit-emoji">🔄</span>
+            <div class="benefit-content">
+              <div class="benefit-title">支持随时退款</div>
+              <div class="benefit-sub">7 天内不满意全额退款</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-bar">
+          <div class="bottom-info">
+            <span class="bottom-price">¥69.9</span>
+            <span class="bottom-period">/季</span>
+            <span class="bottom-tip">7 天免费试用</span>
+          </div>
+          <div class="bottom-btn">立即开通</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">无广告 · 数据加密 · 随时取消</div>
+    </div>
+
+    <span class="sparkle" style="top: 380px; left: 80px;">👑</span>
+    <span class="sparkle" style="top: 460px; right: 100px;">💎</span>
+  </div>
+</body>
+</html>

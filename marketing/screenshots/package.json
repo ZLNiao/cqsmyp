@@ -1,0 +1,14 @@
+{
+  "name": "glamup-screenshots",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "GlamUp 上架截图设计 + Puppeteer 一键导出",
+  "scripts": {
+    "export": "node export.js",
+    "preview": "npx serve ."
+  },
+  "dependencies": {
+    "puppeteer": "^22.15.0"
+  }
+}
