@@ -316,3 +316,211 @@ router.delete('/celebrities/:baiduUserId', requireSuperAdmin, async (req, res, n
 })
 
 export default router
+
+
+
+// =============================================================
+// 高级分析（漏斗 / 留存 / 收入指标 / 用户分布）
+// =============================================================
+
+/**
+ * GET /api/admin/funnel?days=30
+ * 转化漏斗：注册 → 完成分析 → 进入订阅页 → 付费
+ */
+router.get('/funnel', requireAdmin, async (req, res, next) => {
+  try {
+    const days = Math.min(180, Math.max(1, parseInt(req.query.days) || 30))
+    const since = `DATE_SUB(NOW(), INTERVAL ${days} DAY)`
+
+    const [{ totalUsers }] = await query(
+      `SELECT COUNT(*) AS totalUsers FROM users WHERE created_at >= ${since}`
+    )
+    const [{ analyzedUsers }] = await query(
+      `SELECT COUNT(DISTINCT user_id) AS analyzedUsers FROM analyses WHERE created_at >= ${since}`
+    )
+    // 进入订阅页 ≈ 创建过订单（pending + paid）
+    const [{ viewedSubscribe }] = await query(
+      `SELECT COUNT(DISTINCT user_id) AS viewedSubscribe FROM orders WHERE created_at >= ${since}`
+    )
+    const [{ paidUsers }] = await query(
+      `SELECT COUNT(DISTINCT user_id) AS paidUsers FROM orders WHERE status = 'paid' AND created_at >= ${since}`
+    )
+
+    const stages = [
+      { name: '① 注册用户', count: totalUsers, color: '#8B5CF6' },
+      { name: '② 完成分析', count: analyzedUsers, color: '#A855F7' },
+      { name: '③ 查看订阅', count: viewedSubscribe, color: '#D946EF' },
+      { name: '④ 付费转化', count: paidUsers, color: '#EC4899' }
+    ]
+
+    // 计算转化率
+    stages.forEach((s, i) => {
+      if (i === 0) {
+        s.conversionRate = 100
+        s.dropoff = 0
+      } else {
+        const prev = stages[i - 1].count || 1
+        s.conversionRate = +((s.count / prev) * 100).toFixed(1)
+        s.dropoff = stages[i - 1].count - s.count
+      }
+    })
+
+    res.json({ code: 0, data: { stages, days } })
+  } catch (e) {
+    next(e)
+  }
+})
+
+/**
+ * GET /api/admin/retention?weeks=8
+ * 留存矩阵：按周分组的 cohort，看每个 cohort 的 D0/D1+/D7+/D30+ 留存
+ */
+router.get('/retention', requireAdmin, async (req, res, next) => {
+  try {
+    const weeks = Math.min(16, Math.max(2, parseInt(req.query.weeks) || 8))
+
+    // 一次 JOIN 出全部数据：把 user 按周 cohort 分组，统计每个 cohort 在 N 天后的活跃情况
+    // 活跃定义：用户进行过 analyses 操作
+    const rows = await query(
+      `
+      SELECT
+        DATE(DATE_SUB(u.created_at, INTERVAL DAYOFWEEK(u.created_at) - 1 DAY)) AS cohort,
+        COUNT(DISTINCT u.id) AS cohort_size,
+        COUNT(DISTINCT CASE WHEN DATEDIFF(a.created_at, u.created_at) = 0 THEN a.user_id END) AS d0,
+        COUNT(DISTINCT CASE WHEN DATEDIFF(a.created_at, u.created_at) BETWEEN 1 AND 6 THEN a.user_id END) AS d1_6,
+        COUNT(DISTINCT CASE WHEN DATEDIFF(a.created_at, u.created_at) BETWEEN 7 AND 29 THEN a.user_id END) AS d7_29,
+        COUNT(DISTINCT CASE WHEN DATEDIFF(a.created_at, u.created_at) >= 30 THEN a.user_id END) AS d30_plus
+      FROM users u
+      LEFT JOIN analyses a ON a.user_id = u.id
+      WHERE u.created_at >= DATE_SUB(NOW(), INTERVAL ${weeks} WEEK)
+      GROUP BY cohort
+      ORDER BY cohort DESC
+      LIMIT ${weeks}
+      `
+    )
+
+    // 转换成留存率（百分比）
+    const matrix = rows.map((r) => {
+      const size = r.cohort_size || 1
+      return {
+        cohort: r.cohort,
+        size: r.cohort_size,
+        d0: r.cohort_size > 0 ? +((r.d0 / size) * 100).toFixed(1) : 0,
+        d1_6: r.cohort_size > 0 ? +((r.d1_6 / size) * 100).toFixed(1) : 0,
+        d7_29: r.cohort_size > 0 ? +((r.d7_29 / size) * 100).toFixed(1) : 0,
+        d30_plus: r.cohort_size > 0 ? +((r.d30_plus / size) * 100).toFixed(1) : 0
+      }
+    })
+
+    res.json({ code: 0, data: { matrix, weeks } })
+  } catch (e) {
+    next(e)
+  }
+})
+
+/**
+ * GET /api/admin/revenue-metrics
+ * 收入核心指标：ARPU / ARPPU / LTV / 付费转化率
+ */
+router.get('/revenue-metrics', requireAdmin, async (req, res, next) => {
+  try {
+    const [{ totalUsers }] = await query('SELECT COUNT(*) AS totalUsers FROM users')
+    const [{ payingUsers }] = await query(
+      "SELECT COUNT(DISTINCT user_id) AS payingUsers FROM orders WHERE status = 'paid'"
+    )
+    const [{ totalRevenue }] = await query(
+      "SELECT IFNULL(SUM(amount), 0) AS totalRevenue FROM orders WHERE status = 'paid'"
+    )
+    // 各套餐订单分布
+    const planRevenue = await query(
+      `SELECT plan, COUNT(*) AS orders, IFNULL(SUM(amount), 0) AS revenue
+       FROM orders WHERE status = 'paid'
+       GROUP BY plan`
+    )
+    // 各支付方式
+    const payMethodRevenue = await query(
+      `SELECT pay_method, COUNT(*) AS orders, IFNULL(SUM(amount), 0) AS revenue
+       FROM orders WHERE status = 'paid'
+       GROUP BY pay_method`
+    )
+
+    const arpu = totalUsers > 0 ? Number(totalRevenue) / totalUsers : 0
+    const arppu = payingUsers > 0 ? Number(totalRevenue) / payingUsers : 0
+    const conversionRate = totalUsers > 0 ? (payingUsers / totalUsers) * 100 : 0
+    // LTV 估算：基于经验值，假设平均续订 1.7 个周期（行业平均）
+    const ltv = arppu * 1.7
+
+    res.json({
+      code: 0,
+      data: {
+        totalUsers,
+        payingUsers,
+        totalRevenue: Number(totalRevenue),
+        arpu: +arpu.toFixed(2),
+        arppu: +arppu.toFixed(2),
+        ltv: +ltv.toFixed(2),
+        conversionRate: +conversionRate.toFixed(2),
+        planRevenue: planRevenue.map((p) => ({ ...p, revenue: Number(p.revenue) })),
+        payMethodRevenue: payMethodRevenue.map((p) => ({ ...p, revenue: Number(p.revenue) }))
+      }
+    })
+  } catch (e) {
+    next(e)
+  }
+})
+
+/**
+ * GET /api/admin/distribution?days=30
+ * 用户分布：脸型 / 色彩季型 / 妆容偏好 + 时段活跃度
+ */
+router.get('/distribution', requireAdmin, async (req, res, next) => {
+  try {
+    const days = Math.min(180, Math.max(1, parseInt(req.query.days) || 30))
+    const since = `DATE_SUB(NOW(), INTERVAL ${days} DAY)`
+
+    // 脸型分布
+    const faceShapes = await query(
+      `SELECT face_shape AS name, COUNT(*) AS value
+       FROM analyses
+       WHERE created_at >= ${since} AND face_shape IS NOT NULL AND face_shape != ''
+       GROUP BY face_shape ORDER BY value DESC`
+    )
+
+    // 色彩季型分布
+    const skinTones = await query(
+      `SELECT skin_tone AS name, COUNT(*) AS value
+       FROM analyses
+       WHERE created_at >= ${since} AND skin_tone IS NOT NULL AND skin_tone != ''
+       GROUP BY skin_tone ORDER BY value DESC`
+    )
+
+    // AI 妆容偏好
+    const makeupStyles = await query(
+      `SELECT style AS name, COUNT(*) AS value
+       FROM ai_makeups
+       WHERE created_at >= ${since}
+       GROUP BY style ORDER BY value DESC`
+    )
+
+    // 24 小时活跃度（按分析次数）
+    const hourlyRaw = await query(
+      `SELECT HOUR(created_at) AS hour, COUNT(*) AS count
+       FROM analyses
+       WHERE created_at >= ${since}
+       GROUP BY HOUR(created_at)`
+    )
+    // 补全 0~23 小时
+    const hourMap = Object.fromEntries(hourlyRaw.map((r) => [r.hour, r.count]))
+    const hourlyActivity = Array.from({ length: 24 }, (_, h) => ({
+      hour: h,
+      count: Number(hourMap[h] || 0)
+    }))
+
+    res.json({
+      code: 0,
+      data: { faceShapes, skinTones, makeupStyles, hourlyActivity, days }
+    })
+  } catch (e) {
+    next(e)
+  }
+})

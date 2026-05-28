@@ -17,3 +17,17 @@ export const addCelebrity = (formData) =>
   })
 export const removeCelebrity = (baiduUserId) =>
   request.delete(`/admin/celebrities/${baiduUserId}`)
+
+// =============== 高级分析 ===============
+
+/** 转化漏斗 */
+export const getFunnel = (days = 30) => request.get('/admin/funnel', { params: { days } })
+
+/** 留存矩阵 */
+export const getRetention = (weeks = 8) => request.get('/admin/retention', { params: { weeks } })
+
+/** 收入指标（ARPU/ARPPU/LTV） */
+export const getRevenueMetrics = () => request.get('/admin/revenue-metrics')
+
+/** 用户分布 */
+export const getDistribution = (days = 30) => request.get('/admin/distribution', { params: { days } })
