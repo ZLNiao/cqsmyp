@@ -36,3 +36,16 @@ export function createOrder(data) {
 export function getOrderStatus(orderNo) {
   return request({ url: `/order/status/${orderNo}` })
 }
+
+/**
+ * iOS Apple IAP 收据验证
+ * @param {string} receiptData - base64 收据
+ * @param {string} productId - Apple 产品 ID
+ */
+export function verifyAppleReceipt(receiptData, productId) {
+  return request({
+    url: '/order/iap/verify',
+    method: 'POST',
+    data: { receiptData, productId }
+  })
+}

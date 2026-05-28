@@ -18,7 +18,8 @@
         "modules" : {
             "Camera" : {},
             "Payment" : {},
-            "Share" : {}
+            "Share" : {},
+            "iAP" : {}
         },
         "distribute" : {
             "android" : {

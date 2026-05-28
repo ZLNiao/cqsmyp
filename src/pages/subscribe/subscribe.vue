@@ -108,8 +108,9 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { createOrder, getOrderStatus } from '@/api/user'
+import { createOrder, getOrderStatus, verifyAppleReceipt } from '@/api/user'
 import { useUserStore } from '@/store/user'
+import { isIOSApp, APPLE_PRODUCT_IDS } from '@/utils/platform'
 
 const user = useUserStore()
 const statusBarHeight = ref(20)
@@ -193,11 +194,62 @@ const onSubscribe = async () => {
   const plan = plans[planIdx.value]
   const planKey = PLAN_KEY_MAP[plan.period]
 
+  // 2. iOS 必须走 Apple IAP（不接苹果会以 3.1.1 拒审）
+  if (isIOSApp()) {
+    return doApplePay(planKey)
+  }
+
+  // 3. 其他平台走微信支付
+  return doWechatPay(planKey)
+}
+
+/** Apple In-App Purchase 流程 */
+const doApplePay = async (planKey) => {
+  const productId = APPLE_PRODUCT_IDS[planKey]
+  if (!productId) return uni.showToast({ title: '套餐配置错误', icon: 'none' })
+
+  uni.showLoading({ title: '调起 Apple Pay...', mask: true })
+
+  uni.requestPayment({
+    provider: 'appleiap',
+    orderInfo: { productid: productId, quantity: 1 },
+    success: async (res) => {
+      try {
+        const receiptData = res.transactionReceipt || res.receipt
+        if (!receiptData) {
+          uni.hideLoading()
+          uni.showToast({ title: '未获取到收据', icon: 'none' })
+          return
+        }
+
+        // 后端验证 + 开通会员
+        await verifyAppleReceipt(receiptData, productId)
+        uni.hideLoading()
+        await user.fetchProfile()
+        uni.showToast({ title: '订阅成功 ✨', icon: 'success' })
+        setTimeout(() => uni.navigateBack(), 1500)
+      } catch (e) {
+        uni.hideLoading()
+        // request.js 已弹错误 toast
+      }
+    },
+    fail: (err) => {
+      uni.hideLoading()
+      // 用户取消不弹错误
+      if (err.errMsg && !err.errMsg.includes('cancel')) {
+        uni.showToast({ title: 'Apple Pay 失败：' + (err.errMsg || ''), icon: 'none' })
+      }
+    }
+  })
+}
+
+/** 微信支付流程 */
+const doWechatPay = async (planKey) => {
   uni.showLoading({ title: '正在创建订单...', mask: true })
   try {
     const { orderId, payArgs, mock } = await createOrder({ plan: planKey })
 
-    // 2. 后端未配微信支付时的 mock 流程（开发环境）
+    // 后端未配微信支付时的 mock 流程（开发环境）
     if (mock) {
       uni.hideLoading()
       uni.showToast({ title: '订阅成功（开发模式）', icon: 'success' })
@@ -206,7 +258,7 @@ const onSubscribe = async () => {
       return
     }
 
-    // 3. 调起微信支付
+    // 调起微信支付
     uni.hideLoading()
     uni.requestPayment({
       provider: 'wxpay',
@@ -214,7 +266,7 @@ const onSubscribe = async () => {
       ...payArgs,         // H5/小程序端：直接展开
       success: async () => {
         uni.showLoading({ title: '确认中...', mask: true })
-        // 4. 轮询订单状态（最多 10 秒）
+        // 轮询订单状态（最多 10 秒）
         for (let i = 0; i < 10; i++) {
           try {
             const order = await getOrderStatus(orderId)
@@ -242,7 +294,6 @@ const onSubscribe = async () => {
     })
   } catch (e) {
     uni.hideLoading()
-    // request.js 已弹错误 toast
   }
 }
 </script>
