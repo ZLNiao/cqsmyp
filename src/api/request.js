@@ -3,7 +3,12 @@
  * 所有 API 都走这里：自动加 token、统一错误处理
  */
 
-const BASE_URL = 'https://your-backend.com/api' // TODO: 替换为你的后端域名
+// API 域名按环境切换
+// 开发：本地后端 http://localhost:3000/api
+// 生产：HTTPS 域名（必须 HTTPS，否则 iOS ATS 会拒绝）
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://api.your-domain.com/api'
+  : 'http://localhost:3000/api'
 
 export function request(options) {
   const token = uni.getStorageSync('token')

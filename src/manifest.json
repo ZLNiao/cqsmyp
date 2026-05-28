@@ -33,7 +33,15 @@
                     "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
                 ]
             },
-            "ios" : {},
+            "ios" : {
+                "dSYMs" : false,
+                "idfa" : false,
+                "privacyDescription" : {
+                    "NSCameraUsageDescription" : "GlamUp 需要使用相机为您拍摄分析照片",
+                    "NSPhotoLibraryUsageDescription" : "GlamUp 需要访问相册以选择待分析的照片",
+                    "NSPhotoLibraryAddUsageDescription" : "GlamUp 需要保存生成的妆容效果图到相册"
+                }
+            },
             "sdkConfigs" : {
                 "share" : {
                     "weixin" : {

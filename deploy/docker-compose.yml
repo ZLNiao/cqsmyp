@@ -1,0 +1,64 @@
+services:
+  api:
+    build: ../server
+    image: glamup-api:latest
+    container_name: glamup-api
+    restart: always
+    env_file:
+      - ../server/.env
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - glamup-net
+    volumes:
+      - ./logs:/app/logs
+
+  mysql:
+    image: mysql:8.0
+    container_name: glamup-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change_me_root}
+      MYSQL_DATABASE: ${DB_NAME:-glamup}
+      MYSQL_USER: ${DB_USER:-glamup}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-change_me}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - glamup-net
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: glamup-redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    networks:
+      - glamup-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: glamup-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./h5:/usr/share/nginx/html:ro     # 前端 H5 静态文件挂载
+    depends_on:
+      - api
+    networks:
+      - glamup-net
+
+networks:
+  glamup-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
