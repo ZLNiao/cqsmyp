@@ -1,9 +1,14 @@
 <script setup>
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+import { useUserStore } from '@/store/user'
 
 onLaunch(() => {
   console.log('App Launch')
-  // 检查是否首次启动 → 跳引导页（在 onboard 页面里实现重定向）
+  // 启动时如已有 token 则拉一次用户信息
+  const user = useUserStore()
+  if (user.token) {
+    user.fetchProfile()
+  }
 })
 
 onShow(() => {

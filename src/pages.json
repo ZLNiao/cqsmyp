@@ -27,6 +27,13 @@
       }
     },
     {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/loading/loading",
       "style": {
         "navigationBarTitleText": "",

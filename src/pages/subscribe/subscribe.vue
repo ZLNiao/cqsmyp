@@ -107,9 +107,13 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { createOrder } from '@/api/user'
+import { createOrder, getOrderStatus } from '@/api/user'
+import { useUserStore } from '@/store/user'
 
+const user = useUserStore()
 const statusBarHeight = ref(20)
+
+const PLAN_KEY_MAP = { '月': 'month', '季': 'quarter', '年': 'year' }
 
 const compareList = [
   { label: '基础脸型分析', free: true },
@@ -168,16 +172,72 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 const onClose = () => uni.navigateBack()
 
 const onSubscribe = async () => {
+  // 1. 检查登录
+  if (!user.isLogin) {
+    uni.showModal({
+      title: '需要登录',
+      content: '订阅前请先登录账号',
+      confirmText: '去登录',
+      success: ({ confirm }) => {
+        if (confirm) uni.navigateTo({ url: '/pages/login/login' })
+      }
+    })
+    return
+  }
+
   const plan = plans[planIdx.value]
-  uni.showLoading({ title: '调起支付...' })
+  const planKey = PLAN_KEY_MAP[plan.period]
+
+  uni.showLoading({ title: '正在创建订单...', mask: true })
   try {
-    await createOrder({ plan: plan.period, price: plan.price })
+    const { orderId, payArgs, mock } = await createOrder({ plan: planKey })
+
+    // 2. 后端未配微信支付时的 mock 流程（开发环境）
+    if (mock) {
+      uni.hideLoading()
+      uni.showToast({ title: '订阅成功（开发模式）', icon: 'success' })
+      await user.fetchProfile()
+      setTimeout(() => uni.navigateBack(), 1200)
+      return
+    }
+
+    // 3. 调起微信支付
     uni.hideLoading()
-    uni.showToast({ title: '订阅成功', icon: 'success' })
-    setTimeout(() => uni.navigateBack(), 1200)
+    uni.requestPayment({
+      provider: 'wxpay',
+      orderInfo: payArgs, // App 端：用 orderInfo
+      ...payArgs,         // H5/小程序端：直接展开
+      success: async () => {
+        uni.showLoading({ title: '确认中...', mask: true })
+        // 4. 轮询订单状态（最多 10 秒）
+        for (let i = 0; i < 10; i++) {
+          try {
+            const order = await getOrderStatus(orderId)
+            if (order.status === 'paid') {
+              await user.fetchProfile()
+              uni.hideLoading()
+              uni.showToast({ title: '订阅成功 ✨', icon: 'success' })
+              setTimeout(() => uni.navigateBack(), 1500)
+              return
+            }
+          } catch {}
+          await new Promise((r) => setTimeout(r, 1000))
+        }
+        // 超时也认为成功（微信回调可能稍后到达）
+        uni.hideLoading()
+        uni.showToast({ title: '支付完成，会员稍后生效', icon: 'none' })
+        setTimeout(() => uni.navigateBack(), 1500)
+      },
+      fail: (err) => {
+        uni.hideLoading()
+        if (err.errMsg && !err.errMsg.includes('cancel')) {
+          uni.showToast({ title: '支付失败', icon: 'none' })
+        }
+      }
+    })
   } catch (e) {
     uni.hideLoading()
-    uni.showToast({ title: '支付失败', icon: 'none' })
+    // request.js 已弹错误 toast
   }
 }
 </script>

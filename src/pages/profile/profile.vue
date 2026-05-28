@@ -81,9 +81,15 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user'
 
 const user = useUserStore()
+
+onShow(() => {
+  // 每次进入页面拉一次最新用户信息（VIP 状态、续费等）
+  user.fetchProfile()
+})
 
 const stats = [
   { label: '分析次数', value: 12 },
@@ -105,7 +111,21 @@ const menu = [
   { emoji: '⚙️', label: '设置', bg: 'linear-gradient(135deg, #E5E7EB, #9CA3AF)', key: 'settings' }
 ]
 
-const onLogin = () => uni.showToast({ title: '登录功能待接入', icon: 'none' })
+const onLogin = () => {
+  if (user.isLogin) {
+    uni.showActionSheet({
+      itemList: ['退出登录'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          user.logout()
+          uni.showToast({ title: '已退出', icon: 'success' })
+        }
+      }
+    })
+  } else {
+    uni.navigateTo({ url: '/pages/login/login' })
+  }
+}
 const goSubscribe = () => uni.navigateTo({ url: '/pages/subscribe/subscribe' })
 const goHome = () => uni.switchTab({ url: '/pages/index/index' })
 const onMenu = (m) => uni.showToast({ title: m.label, icon: 'none' })
