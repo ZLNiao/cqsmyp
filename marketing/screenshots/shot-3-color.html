@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 3 - 色彩季型</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #FFF7ED 0%, #FDF2F8 60%, #F8F9FA 100%); }
+
+/* 季型大卡片 */
+.season-card {
+  margin: 32px;
+  padding: 48px;
+  background: #fff;
+  border-radius: 40px;
+  box-shadow: 0 16px 48px rgba(245, 158, 11, 0.15);
+}
+.season-emoji {
+  font-size: 96px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.season-name {
+  text-align: center;
+  font-size: 56px;
+  font-weight: 700;
+  color: #1F2937;
+}
+.season-desc {
+  text-align: center;
+  font-size: 28px;
+  color: #6B7280;
+  margin-top: 12px;
+}
+
+/* 推荐色板 */
+.palette-label {
+  font-size: 28px;
+  color: #6B7280;
+  margin: 36px 0 20px;
+  text-align: center;
+}
+.palette {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.color-chip {
+  text-align: center;
+  padding: 20px 0;
+  background: #F9FAFB;
+  border-radius: 24px;
+}
+.color-circle {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.4),
+    0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.color-name {
+  font-size: 26px;
+  color: #1F2937;
+  font-weight: 600;
+}
+
+/* 4 季型对比小图 */
+.seasons-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 32px;
+}
+.season-mini {
+  background: #fff;
+  padding: 20px 12px;
+  border-radius: 20px;
+  text-align: center;
+  border: 3px solid transparent;
+}
+.season-mini.active {
+  border-color: #F59E0B;
+  background: linear-gradient(180deg, #FEF3C7, #FFF);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+}
+.season-mini .emo { font-size: 40px; }
+.season-mini .name { font-size: 22px; color: #6B7280; margin-top: 8px; font-weight: 600; }
+.season-mini.active .name { color: #92400E; }
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob" style="width: 500px; height: 500px; top: -100px; left: -100px; background: #FDE68A; opacity: 0.5;"></div>
+    <div class="blob blob-pink" style="width: 450px; height: 450px; bottom: 200px; right: -100px;"></div>
+
+    <div class="headline">
+      <h1>找到<br><span class="gradient">你的本命色</span></h1>
+      <p>12 季型色彩理论 · AI 私人色彩师</p>
+    </div>
+
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+
+        <div style="padding: 32px 0 0;">
+          <div style="text-align: center; padding: 48px 0 16px;">
+            <div style="font-size: 36px; font-weight: 700; color: #1F2937;">🎨 你的色彩季型</div>
+            <div style="font-size: 24px; color: #9CA3AF; margin-top: 12px;">基于 AI 肤色识别 + 12 季型理论</div>
+          </div>
+
+          <div class="seasons-row">
+            <div class="season-mini">
+              <div class="emo">🌸</div>
+              <div class="name">春季</div>
+            </div>
+            <div class="season-mini active">
+              <div class="emo">🌻</div>
+              <div class="name">夏季</div>
+            </div>
+            <div class="season-mini">
+              <div class="emo">🍂</div>
+              <div class="name">秋季</div>
+            </div>
+            <div class="season-mini">
+              <div class="emo">❄️</div>
+              <div class="name">冬季</div>
+            </div>
+          </div>
+
+          <div class="season-card">
+            <div class="season-emoji">🌻</div>
+            <div class="season-name">暖调 · 春季型</div>
+            <div class="season-desc">明亮温暖、活泼俏皮 · 暖白皮</div>
+
+            <div class="palette-label">为你推荐的本命色</div>
+            <div class="palette">
+              <div class="color-chip">
+                <div class="color-circle" style="background: #FF7F50"></div>
+                <div class="color-name">珊瑚橙</div>
+              </div>
+              <div class="color-chip">
+                <div class="color-circle" style="background: #FFB6A3"></div>
+                <div class="color-name">蜜桃粉</div>
+              </div>
+              <div class="color-chip">
+                <div class="color-circle" style="background: #FFD580"></div>
+                <div class="color-name">暖黄</div>
+              </div>
+              <div class="color-chip">
+                <div class="color-circle" style="background: #A8D8B9"></div>
+                <div class="color-name">嫩绿</div>
+              </div>
+              <div class="color-chip">
+                <div class="color-circle" style="background: #87CEEB"></div>
+                <div class="color-name">天青</div>
+              </div>
+              <div class="color-chip">
+                <div class="color-circle" style="background: #F4C2C2"></div>
+                <div class="color-name">裸粉</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">买口红 · 买衣服 · 不再踩雷</div>
+    </div>
+
+    <span class="sparkle" style="top: 320px; right: 100px;">✨</span>
+    <span class="sparkle" style="top: 480px; left: 80px;">🎨</span>
+  </div>
+</body>
+</html>

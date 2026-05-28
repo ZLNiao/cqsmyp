@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>截图 4 - AI 换妆</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.canvas { background: linear-gradient(180deg, #F5F3FF 0%, #FDF2F8 60%, #F8F9FA 100%); }
+
+/* Before/After 对比 */
+.ba-card {
+  margin: 32px;
+  background: #fff;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(139, 92, 246, 0.2);
+}
+.ba-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #1F1F1F;
+  overflow: hidden;
+}
+.ba-half {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 240px;
+}
+.ba-before {
+  left: 0;
+  width: 50%;
+  background: linear-gradient(135deg, #9CA3AF, #6B7280);
+}
+.ba-after {
+  right: 0;
+  width: 50%;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+}
+.ba-divider {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 6px;
+  background: #fff;
+  transform: translateX(-50%);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+.ba-handle {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: #fff;
+  color: #8B5CF6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+.ba-label {
+  position: absolute;
+  top: 32px;
+  padding: 12px 28px;
+  border-radius: 32px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  z-index: 5;
+}
+.ba-label.left { left: 32px; }
+.ba-label.right {
+  right: 32px;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+}
+.ba-info { padding: 32px 40px; }
+.ba-style {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1F2937;
+}
+.ba-desc {
+  font-size: 28px;
+  color: #6B7280;
+  margin-top: 12px;
+}
+
+/* 风格选择 */
+.styles-section {
+  margin: 32px;
+}
+.styles-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 20px;
+}
+.styles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.style-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 32px 20px;
+  border: 4px solid transparent;
+  text-align: center;
+  position: relative;
+}
+.style-card.active {
+  border-color: #8B5CF6;
+  background: linear-gradient(180deg, #FAF5FF, #fff);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.2);
+}
+.style-emoji { font-size: 64px; margin-bottom: 12px; }
+.style-name { font-size: 30px; font-weight: 700; color: #1F2937; }
+.style-desc { font-size: 22px; color: #6B7280; margin-top: 6px; }
+.style-check {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #8B5CF6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="blob blob-purple" style="width: 500px; height: 500px; top: -100px; right: -150px;"></div>
+    <div class="blob blob-pink" style="width: 450px; height: 450px; bottom: 200px; left: -100px;"></div>
+
+    <div class="headline">
+      <h1>Before / After<br><span class="gradient">一键变美</span></h1>
+      <p>4 种妆容风格 · 滑动对比效果</p>
+    </div>
+
+    <div class="phone" style="top: 580px;">
+      <div class="phone-screen">
+        <div class="notch"></div>
+        <div class="app-status-bar">
+          <span>9:41</span>
+          <span style="display: flex; gap: 6px;">
+            <span style="font-size: 20px;">📶</span>
+            <span style="font-size: 20px;">🔋</span>
+          </span>
+        </div>
+
+        <div style="text-align: center; padding: 48px 32px 16px;">
+          <div style="font-size: 44px; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✨ AI 一键变美</div>
+          <div style="font-size: 24px; color: #6B7280; margin-top: 12px;">选择风格，让 AI 为你定制专属妆容</div>
+        </div>
+
+        <div class="ba-card">
+          <div class="ba-stage">
+            <div class="ba-half ba-before">😶</div>
+            <div class="ba-half ba-after">🤩</div>
+            <div class="ba-label left">Before</div>
+            <div class="ba-label right">After ✨</div>
+            <div class="ba-divider"></div>
+            <div class="ba-handle">⇄</div>
+          </div>
+          <div class="ba-info">
+            <div class="ba-style">💗 约会甜心妆</div>
+            <div class="ba-desc">元气可爱、桃花气</div>
+          </div>
+        </div>
+
+        <div class="styles-section">
+          <div class="styles-title">选择妆容风格</div>
+          <div class="styles">
+            <div class="style-card">
+              <div class="style-emoji">☀️</div>
+              <div class="style-name">日常通勤妆</div>
+              <div class="style-desc">自然清透、显气色</div>
+            </div>
+            <div class="style-card active">
+              <div class="style-emoji">💗</div>
+              <div class="style-name">约会甜心妆</div>
+              <div class="style-desc">元气可爱、桃花气</div>
+              <div class="style-check">✓</div>
+            </div>
+            <div class="style-card">
+              <div class="style-emoji">🌹</div>
+              <div class="style-name">复古港风妆</div>
+              <div class="style-desc">高级浓郁、电影感</div>
+            </div>
+            <div class="style-card">
+              <div class="style-emoji">❄️</div>
+              <div class="style-name">清冷御姐妆</div>
+              <div class="style-desc">冷调高级、气场全开</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="glow">✨</span>
+        <span class="name">GlamUp</span>
+      </div>
+      <div class="brand-tag">看到化妆后的自己 · 提前预览</div>
+    </div>
+
+    <span class="sparkle" style="top: 380px; left: 120px;">✨</span>
+    <span class="sparkle" style="top: 460px; right: 140px;">💄</span>
+  </div>
+</body>
+</html>

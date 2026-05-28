@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>GlamUp 上架截图总览</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #1F2937;
+  color: #fff;
+  padding: 40px;
+}
+h1 {
+  font-size: 32px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sub { color: #9CA3AF; margin-bottom: 32px; font-size: 14px; line-height: 1.6; }
+.note {
+  background: rgba(139, 92, 246, 0.15);
+  border-left: 3px solid #8B5CF6;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+.shot {
+  background: #111827;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+  text-decoration: none;
+  color: #fff;
+}
+.shot:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(139, 92, 246, 0.3);
+}
+.shot iframe {
+  width: 100%;
+  height: 580px;
+  border: 0;
+  pointer-events: none;
+  /* 1290×2796 缩放到 280×580 */
+  transform: scale(0.217);
+  transform-origin: top left;
+  width: 1290px;
+  height: 2796px;
+  display: block;
+}
+.shot-iframe-wrap {
+  width: 100%;
+  height: 580px;
+  overflow: hidden;
+  position: relative;
+  background: #f4f4f5;
+}
+.shot-info {
+  padding: 16px 20px;
+  border-top: 1px solid #374151;
+}
+.shot-num {
+  font-size: 12px;
+  color: #8B5CF6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.shot-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+  <h1>✨ GlamUp 上架截图设计稿</h1>
+  <p class="sub">6 张截图，覆盖 App 核心功能。点击任一张进入全尺寸（1290×2796）预览页。</p>
+
+  <div class="note">
+    <strong>📦 导出 PNG：</strong>
+    在 <code>cqsmyp/marketing/screenshots</code> 目录下运行：
+    <code style="display: block; margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+      npm install puppeteer<br>
+      node export.js
+    </code>
+    自动导出 3 种尺寸（iOS 6.5" / iOS 5.5" / Android 1080×2340）的所有截图到 <code>output/</code> 目录。
+  </div>
+
+  <div class="grid">
+    <a href="shot-1-home.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-1-home.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #1</div>
+        <div class="shot-title">📱 首页 · 核心定位</div>
+      </div>
+    </a>
+
+    <a href="shot-2-analysis.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-2-analysis.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #2</div>
+        <div class="shot-title">🔍 脸型分析</div>
+      </div>
+    </a>
+
+    <a href="shot-3-color.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-3-color.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #3</div>
+        <div class="shot-title">🎨 色彩季型</div>
+      </div>
+    </a>
+
+    <a href="shot-4-makeup.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-4-makeup.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #4</div>
+        <div class="shot-title">💄 AI 换妆 Before/After</div>
+      </div>
+    </a>
+
+    <a href="shot-5-celebs.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-5-celebs.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #5</div>
+        <div class="shot-title">⭐ 明星相似度</div>
+      </div>
+    </a>
+
+    <a href="shot-6-subscribe.html" target="_blank" class="shot">
+      <div class="shot-iframe-wrap">
+        <iframe src="shot-6-subscribe.html"></iframe>
+      </div>
+      <div class="shot-info">
+        <div class="shot-num">截图 #6</div>
+        <div class="shot-title">👑 订阅页 · CTA</div>
+      </div>
+    </a>
+  </div>
+</body>
+</html>
